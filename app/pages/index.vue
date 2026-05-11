@@ -12,12 +12,19 @@ const sendMessage = async () => {
   chatResponse.value = ''
 
   try {
-    const res = await $fetch<{ message: string }>('/api/chat', {
+    const res = await $fetch<{ text: string, audio?: string }>('/api/chat', {
       method: 'POST',
       body: { message: message.value }
     })
 
-    chatResponse.value = res.message
+    chatResponse.value = res.text
+
+    // Memutar audio secara otomatis
+    if (res.audio) {
+      // Menambahkan timestamp agar browser tidak meng-cache file .wav yang sama
+      const audio = new Audio(res.audio + '?t=' + new Date().getTime())
+      audio.play().catch(e => console.error('Error memutar audio:', e))
+    }
   } catch (error) {
     console.error(error)
     chatResponse.value = 'Maaf, terjadi kesalahan saat menghubungi Dana AI.'
@@ -30,9 +37,9 @@ const sendMessage = async () => {
 
 <template>
   <div class="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-    <div class="relative flex items-center justify-center">
+    <div class="relative flex items-center justify-center mt-8">
       <div class="absolute w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-      <div class="orb"></div>
+      <img src="/dana.png" alt="Dana" class="w-44 h-44 rounded-full object-cover border-4 border-zinc-800 shadow-[0_0_60px_rgba(59,130,246,0.5)] relative z-10 transition-transform duration-500 hover:scale-105" />
     </div>
 
     <h1 class="text-4xl font-bold mt-10">
@@ -68,16 +75,7 @@ const sendMessage = async () => {
 </template>
 
 <style scoped>
-.orb {
-  width: 180px;
-  height: 180px;
-  border-radius: 9999px;
-  background: radial-gradient(circle, #60a5fa, #2563eb, #1e1b4b);
-  box-shadow:
-    0 0 60px rgba(59,130,246,0.7),
-    0 0 120px rgba(37,99,235,0.4);
-  animation: pulse 4s infinite ease-in-out;
-}
+
 
 @keyframes pulse {
   0%, 100% {
