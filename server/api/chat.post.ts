@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'mistral',
+        model: 'qwen2.5:0.5b',
         messages: [
           {
             role: 'user',
