@@ -1,3 +1,5 @@
+# Ignore large GLB model files
+public/models/human_face.glb
 # Nuxt dev/build outputs
 .output
 .data
