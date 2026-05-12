@@ -121,10 +121,35 @@ if (process.client) {
           </EffectComposer>
         </Suspense>
 
-        <!-- Human Face Model -->
-        <Suspense>
-          <GLTFModel path="/models/human_face.glb" :scale="2" :position="[0, -0.5, 0]" />
-        </Suspense>
+        <!-- Orb Animation (SVG) -->
+        <foreignObject x="-2.5" y="-2.5" width="5" height="5">
+          <div class="flex items-center justify-center w-full h-full relative">
+            <!-- Orb -->
+            <svg :class="isSpeaking ? 'orb-talking' : 'orb-idle'" width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="orbGradient" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" :stop-color="sphereColor" stop-opacity="1"/>
+                  <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.7"/>
+                </radialGradient>
+              </defs>
+              <ellipse :cy="isSpeaking ? 100 + Math.sin(Date.now()/200)*8 : 100" cx="100" rx="80" :ry="isSpeaking ? 80 + Math.abs(Math.sin(Date.now()/300))*18 : 80" fill="url(#orbGradient)"/>
+              <ellipse v-if="isSpeaking" :cy="120 + Math.sin(Date.now()/120)*6" cx="100" rx="30" :ry="18 + Math.abs(Math.sin(Date.now()/150))*8" fill="#fff" fill-opacity="0.08"/>
+            </svg>
+            <!-- Semi-face Hologram -->
+            <svg class="semi-face-holo pointer-events-none absolute top-0 left-0" width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="z-index:2;">
+              <!-- Outline wajah -->
+              <path d="M60,60 Q50,100 100,180 Q150,100 140,60" stroke="#67e8f9" stroke-width="3" fill="none" opacity="0.35" />
+              <!-- Mata kiri -->
+              <ellipse cx="80" cy="100" rx="12" ry="6" fill="#67e8f9" opacity="0.18" />
+              <!-- Mata kanan -->
+              <ellipse cx="120" cy="100" rx="12" ry="6" fill="#67e8f9" opacity="0.18" />
+              <!-- Mulut -->
+              <path d="M85,135 Q100,145 115,135" stroke="#67e8f9" stroke-width="2" fill="none" opacity="0.22" />
+              <!-- Hidung -->
+              <path d="M100,110 Q102,120 98,120" stroke="#67e8f9" stroke-width="1.5" fill="none" opacity="0.18" />
+            </svg>
+          </div>
+        </foreignObject>
 
         <!-- Particles -->
         <Stars :radius="10" :depth="50" :count="3000" :size="0.1" :size-attenuation="true" />
@@ -264,3 +289,25 @@ if (process.client) {
   animation: catchyPulse 1.4s infinite cubic-bezier(0.4,0,0.2,1);
 }
 </style>
+
+/* Semi-face hologram style */
+.semi-face-holo {
+  filter: drop-shadow(0 0 8px #67e8f9cc) blur(0.5px);
+  transition: opacity 0.3s;
+}
+
+/* Orb SVG Animation */
+.orb-idle {
+  animation: orbIdleAnim 2.2s infinite cubic-bezier(0.4,0,0.2,1);
+}
+.orb-talking {
+  animation: orbTalkAnim 0.7s infinite cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes orbIdleAnim {
+  0%, 100% { filter: blur(0px) brightness(1); }
+  50% { filter: blur(2px) brightness(1.08); }
+}
+@keyframes orbTalkAnim {
+  0%, 100% { filter: blur(1px) brightness(1.1); }
+  50% { filter: blur(4px) brightness(1.25); }
+}
