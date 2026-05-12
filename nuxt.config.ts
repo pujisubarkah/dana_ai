@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     '@idds/vue/index.css',
     './app/main.css'
   ],
+  modules: ['@tresjs/nuxt'],
   vite: {
     plugins: [tailwindcss()]
   }
