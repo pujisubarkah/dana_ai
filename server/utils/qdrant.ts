@@ -1,5 +1,7 @@
 
+
 import { QdrantClient } from '@qdrant/js-client-rest'
+import { createEmbedding } from './embed';
 
 export const qdrant = new QdrantClient({
   host: '127.0.0.1',
@@ -40,4 +42,14 @@ export async function searchVector(collectionName: string, vector: number[], lim
     vector,
     limit,
   })
+}
+
+// Utility: embed text and push to Qdrant
+export async function embedTextAndPushToQdrant(text: string, filename: string) {
+  // Split text into chunks (by paragraphs)
+  const chunks = text.split(/\n\n+/).filter(Boolean);
+  for (const chunk of chunks) {
+    const embedding = await createEmbedding(chunk);
+    await upsertPoint('pdf_docs', `${filename}-${Math.random()}`, embedding, { text: chunk, filename });
+  }
 }

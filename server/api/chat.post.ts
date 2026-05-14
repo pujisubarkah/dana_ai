@@ -1,6 +1,6 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import { qdrant } from '../utils/qdrant'
+import { qdrant, ensureCollection } from '../utils/qdrant'
 import { createEmbedding } from '../utils/embed'
 
 const execAsync = promisify(exec)
@@ -15,6 +15,9 @@ export default defineEventHandler(async (event) => {
     // Generate embedding
     // =========================
     const embedding = await createEmbedding(userMessage)
+
+    // Pastikan koleksi 'memory' sudah ada
+    await ensureCollection('memory', embedding.length)
 
     // =========================
     // Search memory di Qdrant
@@ -31,37 +34,34 @@ export default defineEventHandler(async (event) => {
     }
 
     const memoryContext = memories
-      .map((m: any) => m.payload?.text)
+      .map((m: any) => {
+        // Jika data dari Qdrant memiliki title dan content (buatan manual)
+        if (m.payload?.title && m.payload?.content) {
+          return `[${m.payload.title}]: ${m.payload.content}`
+        }
+        // Fallback ke text (memori otomatis) atau sekadar content
+        return m.payload?.text || m.payload?.content || ''
+      })
+      .filter((text: string) => text.trim() !== '')
       .join('\n')
+
+    // DEBUG: Log context yang dikirim ke AI
+    console.log('==== QDRANT CONTEXT YANG DIKIRIM KE AI ====')
+    console.log(memoryContext)
+    console.log('Scores:', memories.map((m: any) => m.score))
+    console.log('===========================================')
 
     // =========================
     // Prompt system makartigpt
     // =========================
-    const systemPrompt = `
-NAMAMU ADALAH makartigpt.
+    const systemContent = `Kamu adalah MakartiGPT, asisten AI yang cerdas, hangat, komunikatif, dan santai. Gunakan bahasa Indonesia yang natural.`
 
-Kamu adalah asisten AI yang cerdas, hangat, dan humoris.
+    const userContent = `Gunakan informasi Referensi di bawah ini sebagai panduan utama untuk menjawab pertanyaan. Jika informasinya tidak ada, jawab berdasarkan pengetahuanmu secara singkat.
 
-PENTING:
-Jika ditanya tentang namamu, jawab bahwa namamu makartigpt.
+Referensi:
+${memoryContext || '(Tidak ada informasi tambahan)'}
 
-Berikut memory yang kamu ingat:
-${memoryContext}
-
-Karakter:
-- Smart dan komunikatif
-- Humoris ringan
-- Tidak membosankan
-- Menjelaskan teknis dengan sederhana
-- Ramah dan suportif
-- Tidak terlalu formal
-
-Gaya respon:
-- Bahasa Indonesia natural
-- Tidak robotik
-- Jangan terlalu banyak poin
-- Kadang beri candaan ringan
-`
+Pertanyaan: ${userMessage}`
 
     // =========================
     // Chat ke Ollama
@@ -79,11 +79,11 @@ Gaya respon:
           messages: [
             {
               role: 'system',
-              content: systemPrompt,
+              content: systemContent,
             },
             {
               role: 'user',
-              content: userMessage,
+              content: userContent,
             },
           ],
         }),
@@ -105,6 +105,8 @@ Gaya respon:
     // Simpan memory baru
     // =========================
     try {
+      // Pastikan koleksi 'memory' sudah ada sebelum upsert
+      await ensureCollection('memory', embedding.length)
       await qdrant.upsert('memory', {
         wait: true,
         points: [
