@@ -16,14 +16,14 @@ export default defineEventHandler(async (event) => {
     // =========================
     const embedding = await createEmbedding(userMessage)
 
-    // Pastikan koleksi 'memory' sudah ada
-    await ensureCollection('memory', embedding.length)
-
     // =========================
     // Search memory di Qdrant
     // =========================
     let memories: any[] = []
     try {
+      // Pastikan koleksi 'memory' sudah ada
+      await ensureCollection('memory', embedding.length)
+
       memories = await qdrant.search('memory', {
         vector: embedding,
         limit: 5,
@@ -55,16 +55,15 @@ export default defineEventHandler(async (event) => {
     // Prompt system makartigpt
     // =========================
     const systemContent = `Kamu adalah Dana (atau MakartiGPT), asisten AI. ATURAN WAJIB:
-1. Jawab SANGAT SINGKAT (maksimal 1-2 kalimat saja)!
-2. Jika user hanya menyapa (contoh: "Halo", "Hai"), balas sapaannya dengan ramah dan tanyakan apa yang bisa dibantu tanpa basa-basi lain.
-3. Jangan menambahkan informasi tambahan yang tidak diminta.
-4. Gunakan bahasa Indonesia yang santai.`
+  1. Jawab SANGAT SINGKAT (maksimal 1 kalimat saja, tidak boleh lebih)!
+  2. Jangan menambahkan penjelasan, disclaimer, atau informasi tambahan apapun kecuali diminta user.
+  3. Jika user hanya menyapa (contoh: "Halo", "Hai"), balas sapaannya dengan ramah dan tanyakan apa yang bisa dibantu tanpa basa-basi lain.
+  4. Gunakan bahasa Indonesia yang santai.`
 
-    const userContent = `Referensi ingatan (gunakan HANYA jika relevan):
-${memoryContext || '(Kosong)'}
-
-Pesan User: ${userMessage}
-(Ingat: Balas sangat singkat!)`
+    let userContent = `Pesan User: ${userMessage}\n(Ingat: Balas sangat singkat dan santai!)`
+    if (memoryContext) {
+      userContent = `Referensi ingatan (gunakan HANYA jika relevan dengan pesan user):\n${memoryContext}\n\n${userContent}`
+    }
 
     // =========================
     // Chat ke Ollama

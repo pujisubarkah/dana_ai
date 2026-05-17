@@ -1,24 +1,23 @@
 
 <template>
-  <div class="flex">
-    <AdminSidebar />
-    <div class="flex-1 p-8">
-      <h1 class="text-2xl font-bold mb-4">Upload PDF ke Qdrant</h1>
+  <div class="min-h-screen flex items-center justify-center bg-gray-50">
+    <div class="w-full max-w-md p-8 bg-white rounded shadow">
+      <h1 class="text-2xl font-bold mb-2 text-center">Train Your Documents</h1>
+      <p class="mb-6 text-gray-700 text-center">Upload one or more documents and start chatting with them instantly.<br>Supported format: <b>PDF, TXT, MD, RTF, DOCX & CSV</b></p>
       <form @submit.prevent="handleUpload" class="space-y-4">
-        <input type="file" accept="application/pdf" @change="onFileChange" class="block" />
-        <button type="submit" :disabled="loading || !file" class="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">
-          {{ loading ? 'Uploading...' : 'Upload PDF' }}
+        <input type="file" accept=".pdf,.txt,.md,.rtf,.docx,.csv" @change="onFileChange" class="block w-full" />
+        <button type="submit" :disabled="loading || !file" class="w-full px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">
+          {{ loading ? 'Uploading...' : 'Upload Document' }}
         </button>
       </form>
-      <div v-if="message" class="mt-4 text-green-600">{{ message }}</div>
-      <div v-if="error" class="mt-4 text-red-600">{{ error }}</div>
+      <div v-if="message" class="mt-4 text-green-600 text-center">{{ message }}</div>
+      <div v-if="error" class="mt-4 text-red-600 text-center">{{ error }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import AdminSidebar from '~/components/AdminSidebar.vue'
 
 const file = ref<File|null>(null)
 const loading = ref(false)
@@ -38,21 +37,21 @@ async function handleUpload() {
   message.value = ''
   error.value = ''
   const formData = new FormData()
-  formData.append('pdf', file.value)
+  formData.append('file', file.value)
   try {
-    const res = await fetch('/api/admin/upload-pdf', {
+    const res = await fetch('/api/upload-pdf', {
       method: 'POST',
       body: formData,
     })
     const data = await res.json()
     if (res.ok) {
-      message.value = data.message || 'Upload berhasil!'
+      message.value = data.message || 'Upload successful!'
       file.value = null
     } else {
-      error.value = data.error || 'Gagal upload.'
+      error.value = data.error || 'Upload failed.'
     }
   } catch (e: any) {
-    error.value = e.message || 'Gagal upload.'
+    error.value = e.message || 'Upload failed.'
   } finally {
     loading.value = false
   }
