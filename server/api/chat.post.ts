@@ -54,14 +54,17 @@ export default defineEventHandler(async (event) => {
     // =========================
     // Prompt system makartigpt
     // =========================
-    const systemContent = `Kamu adalah MakartiGPT, asisten AI yang cerdas, hangat, komunikatif, dan santai. Gunakan bahasa Indonesia yang natural.`
+    const systemContent = `Kamu adalah Dana (atau MakartiGPT), asisten AI. ATURAN WAJIB:
+1. Jawab SANGAT SINGKAT (maksimal 1-2 kalimat saja)!
+2. Jika user hanya menyapa (contoh: "Halo", "Hai"), balas sapaannya dengan ramah dan tanyakan apa yang bisa dibantu tanpa basa-basi lain.
+3. Jangan menambahkan informasi tambahan yang tidak diminta.
+4. Gunakan bahasa Indonesia yang santai.`
 
-    const userContent = `Gunakan informasi Referensi di bawah ini sebagai panduan utama untuk menjawab pertanyaan. Jika informasinya tidak ada, jawab berdasarkan pengetahuanmu secara singkat.
+    const userContent = `Referensi ingatan (gunakan HANYA jika relevan):
+${memoryContext || '(Kosong)'}
 
-Referensi:
-${memoryContext || '(Tidak ada informasi tambahan)'}
-
-Pertanyaan: ${userMessage}`
+Pesan User: ${userMessage}
+(Ingat: Balas sangat singkat!)`
 
     // =========================
     // Chat ke Ollama

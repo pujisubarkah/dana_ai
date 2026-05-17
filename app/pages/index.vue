@@ -112,7 +112,7 @@ onMounted(() => {
 
         <!-- Moving Scanner effect -->
         <div
-          class="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-transparent via-cyan-300/40 to-transparent hologram-scanner z-20"
+          class="absolute top-0 left-0 right-0 h-8 bg-linear-to-b from-transparent via-cyan-300/40 to-transparent hologram-scanner z-20"
         ></div>
       </div>
 
